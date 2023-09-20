@@ -7,7 +7,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'KalmanBI'
-copyright = '2023, Tom Kimpson'
+copyright = "2023, Tom Kimpson, Joseph O'Leary, Andres Vargas"
 author = 'Tom Kimpson'
 
 # -- General configuration ---------------------------------------------------
