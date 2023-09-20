@@ -5,7 +5,7 @@
 [![codecov](https://codecov.io/gh/tomkimpson/KalmanBI/graph/badge.svg?token=F82TU3Y881)](https://codecov.io/gh/tomkimpson/KalmanBI)
 [![Stable](https://img.shields.io/badge/docs-latest-blue)](https://tomkimpson.github.io/KalmanBI/)
 
-Welcome to the KalmanBI repo.
+Welcome to the KalmanBI ("Kalman Braking Index") repo.
 
 This is a research project for the estimating pulsar braking indices.
 
