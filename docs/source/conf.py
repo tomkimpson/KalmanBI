@@ -6,7 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'StateSpacePTA'
+project = 'KalmanBI'
 copyright = '2023, Tom Kimpson'
 author = 'Tom Kimpson'
 
