@@ -1,24 +1,29 @@
 import numpy as np
-import pandas as pd
 import sdeint
-import matplotlib.pyplot as plt
 
-def GetData(t, tau, n, x0, g_nu, 
-            g_nud, g_nudd, sigma):
+
+
+def GetData(t, x0, γ, n, σp, σm, seed):
     
+
+    #Random seeding
+    generator = np.random.default_rng(seed)
+
+    tau = -x0[0]/x0[1]/(n-1.) 
+    vem0 = x0
+    g_nu,g_nud, g_nudd = γ
+
     def f(x, t):
 
-        vem0 = np.array([1.5051430406, -5.1380792001e-14, 5.23e-27])
-
-        nu = x[0]
-        nud = x[1]
-        nudd = x[2]
+        
+        nu,nud,nudd = x[0],x[1],x[2]
 
         b = n-1
         time_sum = t + tau
         time_ratio = t/tau
         term1 = (1+time_ratio)**(-1/b)
 
+        #Assuming these equations are correct for now. Unchecked
         nu_em = vem0[0]*term1
         nu_emd = -vem0[0]*term1/b/time_sum
         nu_emdd = vem0[0]*n*term1/b**2/time_sum**2
@@ -33,59 +38,18 @@ def GetData(t, tau, n, x0, g_nu,
         return a
 
     def g(x, t):
-        return np.diag([0., 0., sigma])
+        return np.diag([0., 0., σp])
 
 
-    states = sdeint.itoint(f, g, x0, t)
 
-    nu_D = states[:,0]
-    nud_D = states[:,1]
-    nudd_D = states[:,2]
+    #Integrate to get the state variables
+    states = sdeint.itoint(f, g, x0, t,generator=generator)
 
-    nu_data =  nu_D  + np.random.randn(t.size) * np.sqrt(1e-22)
-    nud_data = nud_D
-    nudd_data = nudd_D
+    #Add some mean zero noise to nu to get our observation
+    measurement_noise = generator.normal(0,σm,states[:,0].shape) # Measurement noise. Seeded
+    observations = states[:,0] + measurement_noise
 
 
-    Obs = np.zeros((len(t),4))
-    Obs[0,0] = 0
-    for i in range(0, len(Obs[:,0])-1):
-        Obs[i+1,0] = t[i+1]-t[i]
-    Obs[:,1] = nu_data
-    Obs[:,2] = nud_data
-    Obs[:,3] = nudd_data
-
-    plt.figure(0)
-    plt.plot(t,nu_data)
-    plt.figure(1)
-    plt.plot(t,nud_data)
-    plt.figure(2)
-    plt.plot(t,nudd_data)
-    plt.show()
-
-    return Obs
-
-
-x0 = np.array([1.5051430406, -5.1380792001e-14, 5.23e-27])
-g_nu = 1e-13 
-g_nud = 3e-13
-g_nudd = 1e-6
-
-sigma = 2.5e-32
-
-day = 86400
-NObs = 1000
-t = np.linspace(0,1.5e3*day,NObs)
-
-n = 3
-tau = -x0[0]/x0[1]/(n-1.) 
-
-Obs = GetData(t, tau, n, x0, g_nu, 
-            g_nud, g_nudd, sigma)
-
-df = pd.DataFrame({"dt": Obs[:,0], "nu": Obs[:,1], "nudot": Obs[:,2], "nuddot": Obs[:,3]})
-
-df.to_csv('Data/Data.csv', index=False)
-
+    return states,observations
 
 

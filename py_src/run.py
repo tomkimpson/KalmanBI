@@ -15,7 +15,7 @@ def bilby_inference_run(arg_name,seed):
 
     logger = logging.getLogger().setLevel(logging.INFO)
     #Setup the system
-    P   = SystemParameters(seed=seed) # define the system parameters as a dict. Todo: make this a class
+    P   = SystemParameters(seed=seed) # define the system parameters as a dict. 
                                 # setup the PTA
     data = SyntheticData(P)                            # generate some synthetic data
 
