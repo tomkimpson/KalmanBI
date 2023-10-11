@@ -2,7 +2,6 @@
 # import matplotlib.pyplot as plt
 # import pandas as pd
 
-# from UKF_Optim import KalmanFilterUpdateUKFOPtim
 # from sample import KalmanLikelihood
 # from corner import corner
 # import bilby
@@ -14,6 +13,9 @@ import logging
 
 
 from DataGenerator import GetData
+from UKF_Optim import KalmanFilterUpdateUKFOPtim
+
+
 
 def RunKF():
     logger = logging.getLogger().setLevel(logging.INFO)
@@ -36,19 +38,17 @@ def RunKF():
 
     #Generate some synthetic data
     logging.info(f"Generating synthetic data")
-    states,obseravations = GetData(t, x0, γ, n, σp, σm, seed)
+    states,observations = GetData(t, x0, γ, n, σp, σm, seed)
+
+
+
+    #Define the KF model used
+    model = KalmanFilterUpdateUKFOPtim(ObsData, ObsScaled, MeasR, tinit, nstates, nmeas, gammas, sigmas)
 
 
 
 
-
-
-
-
-
-
-
-
+    ll = model.ll_on_data(self.parameters)
 
 
 
@@ -95,7 +95,6 @@ def RunKF():
 #     gammas = [] 
 #     sigmas = []
 
-#     model = KalmanFilterUpdateUKFOPtim(ObsData, ObsScaled, MeasR, tinit, nstates, nmeas, gammas, sigmas)
 
 #     likelihood = KalmanLikelihood(model)
 
