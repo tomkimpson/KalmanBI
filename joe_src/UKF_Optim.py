@@ -11,13 +11,13 @@ import sdeint
 import scipy.linalg as la
 import scipy.optimize as optimize
 import numpy as np
-import torch
-import torchdiffeq
+#import torch
+#import torchdiffeq
 
-from numba import jit
+#from numba import jit
 from scipy.integrate import odeint
-from numba.types import float64, int64
-from numba.typed import List
+#from numba.types import float64, int64
+#from numba.typed import List
 
 
 ################################
@@ -25,7 +25,7 @@ from numba.typed import List
 
 ################################
 
-@jit(nopython=True)
+#@jit(nopython=True)
 def f(t, x, g_nudd):
 
     # The chances of there being a typo below are high. 
@@ -62,7 +62,7 @@ def f(t, x, g_nudd):
 
     return np.array([-(g_nu*a1) + nud, -(g_nud*a2) + nudd, -(g_nudd*a3) + nu_emddd])
 
-@jit(nopython=True)
+#@jit(nopython=True)
 def rk4_step(func, x, t, dt, *args):
     k1 = dt * func(t, x, *args)
     k2 = dt * func(t + dt / 2, x + k1 / 2, *args)
@@ -71,7 +71,7 @@ def rk4_step(func, x, t, dt, *args):
 
     return x + (k1 + 2 * k2 + 2 * k3 + k4) / 6
 
-@jit(nopython=True)
+#@jit(nopython=True)
 def propagate_sigma_points(SigmaPoints, params, Deltat):
     g_nudd = params 
 
@@ -83,7 +83,7 @@ def propagate_sigma_points(SigmaPoints, params, Deltat):
 
 ################################
 
-@jit(nopython=True)
+#@jit(nopython=True)
 def Predict(Wc, Wm, PropagatedSigmaPoints, nstates, Q):
     Xp = np.zeros((nstates, 1))
     for i in range(len(Wm)):
@@ -100,10 +100,14 @@ def Predict(Wc, Wm, PropagatedSigmaPoints, nstates, Q):
 
     return Xp, Pp
 
-@jit(nopython=True)
+#@jit(nopython=True)
 def Update(Xp, Pp, Wc, PropagatedSigmaPoints, Observation, WeightedMeas, MeasurementDiff, RMeas, nmeas):
 
     Inn = Observation - WeightedMeas
+
+    print("Update")
+    print("the size of RMeas is",RMeas.shape)
+    print(nmeas)
 
     SigmaPointDiff = PropagatedSigmaPoints - Xp.T
 
@@ -130,15 +134,21 @@ def Update(Xp, Pp, Wc, PropagatedSigmaPoints, Observation, WeightedMeas, Measure
     return X, P, ll
 
 class KalmanFilterUpdateUKFOPtim(object):
-    def __init__(self, ObsRaw, ObsArray, R, tinit, nstates, nmeas, gammas, sigmas):
-        self.ObsRaw = ObsRaw
-        self.Obs = ObsArray
+    def __init__(self, ObsRaw, R, nx, ny):
+        #self.ObsRaw = ObsRaw
+        
+        
+        self.Obs = ObsRaw
+
+
+
+
         self.RMeas = R
-        self.t0 = tinit
-        self.nstates = nstates
-        self.nmeas = nmeas
-        self.gammas = gammas 
-        self.sigmas = sigmas
+        #self.t0 = tinit
+        self.nstates = nx
+        self.nmeas = ny
+        #self.gammas = gammas 
+        #self.sigmas = sigmas
         self.ll = 0
 
         self.Q = np.zeros((len(self.Obs),self.nstates,self.nstates))
@@ -148,6 +158,7 @@ class KalmanFilterUpdateUKFOPtim(object):
         self.Xp, self.Pp = Predict(self.Wc, self.Wm, self.PropagatedSigmaPoints, self.nstates, Q)
 
     def Update(self, Observation, MeasurementNoise):
+        print("The size of the measurement noise is: ",MeasurementNoise.shape)
         self.X, self.P, ll = Update(self.Xp, self.Pp, self.Wc, self.PropagatedSigmaPoints,
                              Observation, self.WeightedMeas, self.MeasurementDiff, MeasurementNoise, self.nmeas)
 
@@ -214,6 +225,9 @@ class KalmanFilterUpdateUKFOPtim(object):
         # self.MeasurementNoise[:,1,1] = self.RMeas[1,1]
         # self.MeasurementNoise[:,2,2] = self.RMeas[2,2]
 
+        print("Got measurement nouse. Whats its shape?")
+        print(self.MeasurementNoise.shape)
+
 
     def ll_on_data(self, params, returnstates=False):
         self.ll = 0
@@ -226,7 +240,7 @@ class KalmanFilterUpdateUKFOPtim(object):
         self.P[1][1] = 1e-36
         self.P[2][2] = 1e-54
 
-        NObs = len(self.ObsRaw)
+        NObs = len(self.Obs)
         if returnstates:
             xx = np.zeros((NObs,self.nstates))
             px = np.zeros((NObs,self.nstates))

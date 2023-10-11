@@ -43,12 +43,30 @@ def RunKF():
 
 
     #Define the KF model used
-    model = KalmanFilterUpdateUKFOPtim(ObsData, ObsScaled, MeasR, tinit, nstates, nmeas, gammas, sigmas)
+
+    # In Joe UKF there is a "time" column which we now join in
+    # Think this is a hangover for variable stepsizes, which we do not have here
+    observation_times = np.zeros_like(observations)
+    for i in range(0, len(observation_times)-1):
+        observation_times[i+1] = t[i+1]-t[i]
+
+    observations_array = np.zeros((len(observations),2))
+    observations_array[:,0] = observation_times #the zeroth column is the times
+    observations_array[:,1] = observations #the first column is the actual data
+
+    nx = states.shape[-1]
+    ny = 1 #By hand. We only have a single measurement state
+    R_Matrix = MeasR = np.zeros((ny, ny)) #measurement matrix. Just a scalar for this problem
+    R_Matrix[0,0] = σm**2
+    
+    
+    
+    model = KalmanFilterUpdateUKFOPtim(observations_array, R_Matrix, nx, ny)
 
 
-
-
-    ll = model.ll_on_data(self.parameters)
+    #Lets get a likelihood
+    parameters = {'g_nudd': 123, 'Sigma':1e-11}
+    ll = model.ll_on_data(parameters)
 
 
 
@@ -64,11 +82,7 @@ def RunKF():
 #     OutputDirectory = 'Results'
 #     fID = 'test'
 
-#     ObsData = np.asarray(Data)
-#     ObsScaled = ObsData[:,0:2]
-#     tinit = 0
-#     nstates = 3
-#     nmeas = 1
+
 
 #     g_nu = 1e-13 
 #     g_nud = 3e-13
@@ -86,8 +100,7 @@ def RunKF():
 
 #     # Measurement noise MeasR defined below. Remember, we are dealing with variances. Hence 
 #     # the entries of MeasR are squared. 
-#     MeasR = np.zeros((nmeas, nmeas))
-#     MeasR[0,0] = 1e-22
+
 
 #     # gammas/sigmas below are brought forward from a different project. They don't actually do anything 
 #     # in the present code.
